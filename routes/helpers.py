@@ -21,10 +21,10 @@ def proxy_images(url: str, light=False):
 	if not url:
 		return "/static/img/unknown.jpg"
 	if light:
-		return url.replace('https://cdn.intra.42.fr/users/', 'https://friends42.fr/proxy/resize/70/')
+		return url.replace('https://cdn.intra.42.fr/users/', 'https://friends.42paris.fr/proxy/resize/70/')
 	if 'small' in url or 'medium' in url:
-		return url.replace('https://cdn.intra.42.fr/users/', 'https://friends42.fr/proxy/')
-	return url.replace('https://cdn.intra.42.fr/users/', 'https://friends42.fr/proxy/resize/512/')
+		return url.replace('https://cdn.intra.42.fr/users/', 'https://friends.42paris.fr/proxy/')
+	return url.replace('https://cdn.intra.42.fr/users/', 'https://friends.42paris.fr/proxy/resize/512/')
 
 
 def auth_required(function):
@@ -173,6 +173,16 @@ def create_users(db, profiles):
 			r.set('USER>' + str(elem["user"]["login"]), elem['user']["location"], ex=200)
 			r.set('PERM>' + str(elem["user"]["login"]), elem['user']["location"])
 	db.commit()
+
+def set_user_defined_location(user_id: int, location: str, expiration: int = 3600):
+	key = f"USER_DEFINED_LOCATION>{user_id}"
+	r.set(key, location, ex=expiration)
+
+
+def get_user_defined_location(user_id: int):
+	key = f"USER_DEFINED_LOCATION>{user_id}"
+	location = r.get(key)
+	return location.decode('utf-8') if location else None
 
 
 def get_last_pos(login):

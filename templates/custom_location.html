@@ -1,0 +1,153 @@
+{% extends 'template.html' %}
+{% block css %}
+	<link href="/static/css/friends.css?v={{ version }}" rel="stylesheet">
+	<style>
+		.location-card {
+			max-width: 600px;
+			margin: 0 auto;
+		}
+		.current-location {
+			background-color: rgba(13, 110, 253, 0.1);
+			border: 1px solid rgba(13, 110, 253, 0.3);
+			border-radius: 8px;
+			padding: 15px;
+			margin-bottom: 20px;
+		}
+		.expiration-select {
+			max-width: 200px;
+		}
+		.location-input {
+			font-size: 1rem;
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+	<div class="container mt-4">
+		<div class="location-card">
+			<h2 class="text-center mb-4">
+				<i class="fa-solid fa-map-pin text-info"></i> Localisation personnalisée
+			</h2>
+
+			{% if current_location %}
+				<div class="current-location">
+					<h5 class="mb-2">
+						<i class="fa-solid fa-check-circle text-success"></i> Localisation actuelle
+					</h5>
+					<p class="mb-2">
+						<strong>📍 {{ current_location|e }}</strong>
+					</p>
+					<form action="/custom-location/remove" method="POST" class="d-inline">
+						<input type="hidden" name="csrf" value="{{ create_csrf() }}">
+						<button type="submit" class="btn btn-sm btn-outline-danger">
+							<i class="fa-solid fa-trash"></i> Supprimer
+						</button>
+					</form>
+				</div>
+			{% else %}
+				<div class="alert alert-info">
+					<i class="fa-solid fa-info-circle"></i>
+					Vous n'avez pas de localisation personnalisée définie.
+				</div>
+			{% endif %}
+
+			<div class="card shadow">
+				<div class="card-header">
+					<h5 class="card-title mb-0">
+						<i class="fa-solid fa-plus"></i> 
+						{{ "Modifier" if current_location else "Définir" }} votre localisation
+					</h5>
+				</div>
+				<div class="card-body">
+					<form action="/custom-location/set" method="POST">
+						<input type="hidden" name="csrf" value="{{ create_csrf() }}">
+						
+						<div class="mb-3">
+							<label for="location" class="form-label">
+								<i class="fa-solid fa-map-marker-alt"></i> Localisation
+							</label>
+							<input type="text" 
+							       class="form-control location-input" 
+							       id="location" 
+							       name="location" 
+							       placeholder="Ex: Flex, café fin du monde, pheno"
+							       maxlength="26"
+							       value="{{ current_location|e if current_location else '' }}"
+							       required>
+							<div class="form-text">
+								Maximum 26 caractères. Cette localisation sera visible par tout le monde.
+							</div>
+						</div>
+
+						<div class="mb-3">
+							<label for="expiration" class="form-label">
+								<i class="fa-solid fa-clock"></i> Expiration
+							</label>
+							<select class="form-select expiration-select" id="expiration" name="expiration">
+								<option value="1800">30 minutes</option>
+								<option value="3600" selected>1 heure</option>
+								<option value="7200">2 heures</option>
+								<option value="14400">4 heures</option>
+								<option value="28800">8 heures</option>
+								<option value="43200">12 heures</option>
+								<option value="86400">24 heures</option>
+							</select>
+							<div class="form-text">
+								Votre localisation personnalisée sera automatiquement supprimée après cette durée.
+							</div>
+						</div>
+
+						<div class="d-grid gap-2">
+							<button type="submit" class="btn btn-primary">
+								<i class="fa-solid fa-save"></i>
+								{{ "Mettre à jour" if current_location else "Définir" }} la localisation
+							</button>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<div class="mt-4">
+				<h6>ℹ️ À propos des localisations personnalisées</h6>
+				<ul class="text-muted small">
+					<li>Votre localisation personnalisée apparaîtra sur votre profil et dans la liste d'amis</li>
+					<li>Elle sera affichée avec une icône 📍 pour la distinguer de votre position réelle</li>
+					<li>Vos amis vous verront comme "en ligne" si vous avez une localisation personnalisée</li>
+					<li>La localisation expire automatiquement après la durée choisie</li>
+					<li>Vous pouvez la supprimer à tout moment</li>
+				</ul>
+			</div>
+
+			<div class="text-center mt-3">
+				<a href="/friends/" class="btn btn-outline-secondary">
+					<i class="fa-solid fa-user-group"></i> Retour aux amis
+				</a>
+			</div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block scripts %}
+	<script>
+		// Character counter for location input
+		const locationInput = document.getElementById('location');
+		const maxLength = 26;
+
+		if (locationInput) {
+			// Add character counter
+			const counter = document.createElement('small');
+			counter.className = 'text-muted float-end';
+			counter.id = 'char-counter';
+			
+			const updateCounter = () => {
+				const remaining = maxLength - locationInput.value.length;
+				counter.textContent = `${locationInput.value.length}/${maxLength}`;
+				counter.className = remaining < 10 ? 'text-danger float-end' : 'text-muted float-end';
+			};
+			
+			locationInput.parentNode.querySelector('.form-text').appendChild(counter);
+			locationInput.addEventListener('input', updateCounter);
+			updateCounter();
+		}
+	</script>
+{% endblock %}

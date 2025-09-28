@@ -127,19 +127,34 @@ def friends_route(userid):
 	for friend in friend_list:
 		if friend['has'] in shadow_bans:
 			friend['position'] = None
+			friend['custom_location'] = None
 			friend["last_active"] = ""
 		else:
 			friend["position"] = get_position(friend["name"])
-			if friend['active'] and friend['position'] is None:
+			friend['custom_location'] = get_user_defined_location(friend['has'])
+			if friend['active'] and friend['position'] is None and friend['custom_location'] is None:
 				date = arrow.get(friend['active'], "YYYY-MM-DD HH:mm:ss", tzinfo='UTC')
 				friend["last_active"] = "depuis " + date.humanize(locale='FR', only_distance=True)
 			else:
 				friend["last_active"] = ""
 	friend_list = sorted(friend_list, key=lambda d: d['name'])
 	friend_list = sorted(friend_list, key=lambda d: 0 if d['relation'] == 1 else 1)
-	friend_list = sorted(friend_list, key=lambda d: 0 if d['position'] else 1)
+	# Sort by active status: custom location or position means active
+	friend_list = sorted(friend_list, key=lambda d: 0 if (d['position'] or d['custom_location']) else 1)
 	return render_template('friends.html', friends=friend_list, theme=theme)
 
+
+@app.route('/custom-location/')
+@auth_required
+def custom_location_page(userid):
+	"""
+	Main custom location page with form
+	"""
+	current_location = get_user_defined_location(userid['userid'])
+	
+	return render_template('custom_location.html', 
+	                      current_location=current_location,
+	                      theme=userid['theme'])
 
 @app.route('/search/<keyword>/<int:friends_only>')
 @auth_required

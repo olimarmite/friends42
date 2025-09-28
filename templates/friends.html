@@ -40,9 +40,16 @@
 					     alt="{{ friend.name }}'s image">
 					<div class="card-body">
 						<h5 class="card-title">
-							<i class="fa-solid {{ "fa-2xs fa-circle online" if friend.position else "fa-xs fa-person-walking offline" }}"></i> {{ friend.name }}
+							<i class="fa-solid {{ "fa-2xs fa-circle online" if (friend.position or friend.custom_location) else "fa-xs fa-person-walking offline" }}"></i> {{ friend.name }}
 						</h5>
-						<p class="card-text">{{ friend.position if friend.position else 'Absent' }} {{ friend.last_active }}
+						<p class="card-text">
+							{% if friend.custom_location %}
+								<span class="text-info">📍 {{ friend.custom_location|e }}</span>
+								<br>
+							{% endif %}
+							{% if friend.position or not friend.custom_location %}
+							{{ friend.position if friend.position else 'Absent' }} {{ friend.last_active }}
+							{% endif %}
 							{% if friend.position %}
 								<a class="fa-solid fa-users-viewfinder" href="/goto/{{ friend.position }}"></a>
 							{% endif %}
